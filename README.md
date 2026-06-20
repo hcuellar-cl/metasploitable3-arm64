@@ -43,7 +43,7 @@ cd metasploitable3-arm64
 ```
 
 ### Configuration (`utm.env`)
-Create a file named `utm.env` in the root of the project on your host Mac:
+Create a file named `utm.env` in the root of the project on your host Mac. Note that the values below are an example, and you must replace them with the actual settings configured when installing your Ubuntu ARM virtual machine (making sure the SSH server is enabled):
 ```env
 UTM_HOST_IP=192.168.64.29
 UTM_USER=msfadmin
