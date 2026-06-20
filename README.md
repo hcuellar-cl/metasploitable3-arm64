@@ -33,7 +33,14 @@ To make the legacy Metasploitable 3 recipes run on a modern Ubuntu ARM64 environ
 ### Prerequisites
 1. A Mac with Apple Silicon (M-series chip).
 2. [UTM](https://mac.getutm.app/) installed.
-3. An Ubuntu Server 20.04 LTS ARM64 virtual machine configured with Apple Virtualization and Shared Network (NAT).
+3. An [Ubuntu Server 20.04 LTS ARM64](http://cdimage.ubuntu.com/releases/focal/release/) virtual machine configured with Apple Virtualization and Shared Network (NAT).
+
+### Installation
+Clone this repository to your host Mac and navigate into it:
+```bash
+git clone https://github.com/hcuellar-cl/metasploitable3-arm64.git
+cd metasploitable3-arm64
+```
 
 ### Configuration (`utm.env`)
 Create a file named `utm.env` in the root of the project on your host Mac:
@@ -50,6 +57,7 @@ Run the automated deployment script from your Mac terminal:
 chmod +x deploy_to_vm.sh
 ./deploy_to_vm.sh
 ```
+
 
 ---
 
