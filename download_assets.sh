@@ -1,36 +1,36 @@
 #!/bin/bash
-# Script para descargar dependencias y preparar recursos offline para Metasploitable 3 ARM.
-# Debe ejecutarse en la máquina anfitriona (Host Mac).
+# Script to download dependencies and prepare offline resources for Metasploitable 3 ARM.
+# Must be executed on the host machine (Host Mac).
 
 set -euo pipefail
 
-# Directorios de destino
+# Target directories
 BUILD_DIR="metasploitable3-arm-build"
 ASSETS_DIR="$BUILD_DIR/assets"
 CONFIGS_DIR="$BUILD_DIR/configs"
 
-echo "=== Creando estructura de directorios ==="
+echo "=== Creating directory structure ==="
 mkdir -p "$ASSETS_DIR"
 mkdir -p "$CONFIGS_DIR"
 
-# Función para descargar archivos de forma segura y portable
+# Function to download files safely and portably
 download_file() {
     local file="$1"
     local url="$2"
     local target="$ASSETS_DIR/$file"
     
     if [ -f "$target" ]; then
-        echo "✓ $file ya existe, omitiendo descarga."
+        echo "✓ $file already exists, skipping download."
     else
-        echo "Descargando $file de $url..."
-        # Usamos curl con -L para seguir redirecciones, --fail para salir con error en HTTP >= 400 y --retry para resiliencia
+        echo "Downloading $file from $url..."
+        # Use curl with -L to follow redirects, --fail to exit on HTTP error >= 400, and --retry for resilience
         if ! curl -L --fail --retry 3 --retry-delay 2 -o "$target" "$url"; then
-            echo "ERROR: Falló la descarga de $file"
-            # Intento de descarga alternativo si falla ftp.proftpd.org o similar
+            echo "ERROR: Failed to download $file"
+            # Fallback download attempt if ftp.proftpd.org or similar fails
             if [ "$file" == "proftpd-1.3.5.tar.gz" ]; then
-                echo "Intentando espejo alternativo para ProFTPd..."
+                echo "Attempting alternative mirror for ProFTPd..."
                 if ! curl -L --fail -o "$target" "https://github.com/proftpd/proftpd/archive/refs/tags/v1.3.5.tar.gz"; then
-                    echo "ERROR: También falló el espejo alternativo de ProFTPd."
+                    echo "ERROR: Alternative mirror for ProFTPd also failed."
                     exit 1
                 fi
             else
@@ -40,7 +40,7 @@ download_file() {
     fi
 }
 
-echo "=== Descargando paquetes fuente ==="
+echo "=== Downloading source packages ==="
 download_file "php-5.4.5.tar.gz" "http://museum.php.net/php5/php-5.4.5.tar.gz"
 download_file "Unreal3.2.8.1_backdoor.tar.gz" "https://www.exploit-db.com/apps/752e46f2d873c1679fa99de3f52a274d-Unreal3.2.8.1_backdoor.tar_.gz"
 download_file "proftpd-1.3.5.tar.gz" "https://ftp.osuosl.org/pub/blfs/conglomeration/proftpd/proftpd-1.3.5.tar.gz"
@@ -52,20 +52,19 @@ download_file "libxml29_compat.patch" "https://mail.gnome.org/archives/xml/2012-
 download_file "metasploitable3-readme.tar.gz" "https://github.com/jbarnett-r7/metasploitable3-readme/archive/refs/heads/master.tar.gz"
 download_file "libssl1.0.0_1.0.2n-1ubuntu5.13_amd64.deb" "http://security.ubuntu.com/ubuntu/pool/main/o/openssl1.0/libssl1.0.0_1.0.2n-1ubuntu5.13_amd64.deb"
 
-
-echo "=== Copiando archivos de configuración locales del repositorio ==="
+echo "=== Copying local configuration files from repository ==="
 SRC_FILES_DIR="metasploitable3/chef/cookbooks/metasploitable/files"
 if [ -d "$SRC_FILES_DIR" ]; then
     cp -r "$SRC_FILES_DIR"/* "$CONFIGS_DIR"/
-    echo "✓ Archivos locales copiados con éxito."
+    echo "✓ Local files copied successfully."
 else
-    echo "ERROR: No se encontró el directorio de archivos origen ($SRC_FILES_DIR)."
+    echo "ERROR: Source files directory not found ($SRC_FILES_DIR)."
     exit 1
 fi
 
-echo "=== Generando configuraciones resueltas a partir de plantillas ==="
+echo "=== Generating resolved configurations from templates ==="
 
-# 1. Resolver knockd.conf
+# 1. Resolve knockd.conf
 cat << 'EOF' > "$CONFIGS_DIR/knockd/knockd.conf"
 [options]
         UseSyslog
@@ -84,9 +83,9 @@ cat << 'EOF' > "$CONFIGS_DIR/knockd/knockd.conf"
         command     = /sbin/iptables -D INPUT -s %IP% -p tcp --dport 8989 -j ACCEPT
         tcpflags    = syn
 EOF
-echo "✓ Archivo configs/knockd/knockd.conf generado."
+echo "✓ configs/knockd/knockd.conf file generated."
 
-# 2. Resolver payroll.sql
+# 2. Resolve payroll.sql
 cat << 'EOF' > "$CONFIGS_DIR/payroll_app/payroll.sql"
 -- phpMyAdmin SQL Dump
 -- version 3.5.8
@@ -137,9 +136,9 @@ INSERT INTO `users` (`username`, `first_name`, `last_name`, `password`, `salary`
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 EOF
-echo "✓ Archivo configs/payroll_app/payroll.sql generado."
+echo "✓ configs/payroll_app/payroll.sql file generated."
 
-# 3. Resolver start.sh de readme_app
+# 3. Resolve start.sh for readme_app
 mkdir -p "$CONFIGS_DIR/readme_app"
 cat << 'EOF' > "$CONFIGS_DIR/readme_app/start.sh"
 #!/bin/sh
@@ -148,74 +147,73 @@ bundle install --path vendor/bundle
 bundle exec rails s -b 0.0.0.0 -p 3500
 EOF
 chmod +x "$CONFIGS_DIR/readme_app/start.sh"
-echo "✓ Archivo configs/readme_app/start.sh generado."
+echo "✓ configs/readme_app/start.sh file generated."
 
+# 4. Ensure sinatra directories contain the correct binary
 if [ -f "$CONFIGS_DIR/sinatra/virtualbox/loader" ]; then
     cp "$CONFIGS_DIR/sinatra/virtualbox/loader" "$CONFIGS_DIR/sinatra/loader"
-    echo "✓ Copiado sinatra loader (x86_64)."
+    echo "✓ Sinatra loader (x86_64) copied."
 else
-    echo "WARNING: No se encontró sinatra loader binary en virtualbox/"
+    echo "WARNING: Sinatra loader binary not found in virtualbox/"
 fi
 
-# Copiar el server.rb para el servicio Sinatra sin obfuscación/loader
+# Copy server.rb for the Sinatra service without obfuscation/loader
 if [ -f "metasploitable3/resources/flags/linux_flags/6_of_clubs/server.rb" ]; then
     cp "metasploitable3/resources/flags/linux_flags/6_of_clubs/server.rb" "$CONFIGS_DIR/sinatra/server.rb"
-    echo "✓ Copiado sinatra server.rb de flags a configuraciones."
+    echo "✓ Sinatra server.rb copied from flags to configurations."
 else
-    echo "WARNING: No se encontró 'server.rb' de sinatra en el repositorio de metasploitable3."
+    echo "WARNING: 'server.rb' for sinatra not found in the metasploitable3 repository."
 fi
 
-
-# 5. Copiar los scripts de aprovisionamiento y auditoría al directorio de construcción
+# 5. Copy the provisioning and auditing scripts to the build directory
 if [ -f "provision_arm.sh" ]; then
     cp "provision_arm.sh" "$BUILD_DIR/provision_arm.sh"
     chmod +x "$BUILD_DIR/provision_arm.sh"
-    echo "✓ Copiado script de aprovisionamiento 'provision_arm.sh' al directorio de construcción."
+    echo "✓ Provisioning script 'provision_arm.sh' copied to build directory."
 else
-    echo "WARNING: No se encontró 'provision_arm.sh' en el directorio raíz."
+    echo "WARNING: 'provision_arm.sh' not found in the root directory."
 fi
 
 if [ -f "audit_services.sh" ]; then
     cp "audit_services.sh" "$BUILD_DIR/audit_services.sh"
     chmod +x "$BUILD_DIR/audit_services.sh"
-    echo "✓ Copiado script de auditoría 'audit_services.sh' al directorio de construcción."
+    echo "✓ Auditing script 'audit_services.sh' copied to build directory."
 else
-    echo "WARNING: No se encontró 'audit_services.sh' en el directorio raíz."
+    echo "WARNING: 'audit_services.sh' not found in the root directory."
 fi
 
-# 6. Crear un archivo README informativo en el paquete
+# 6. Create an informative README file in the package
 cat << 'EOF' > "$BUILD_DIR/README.txt"
-Metasploitable 3 ARM (ARM64) - Kit de aprovisionamiento offline
+Metasploitable 3 ARM (ARM64) - Offline Provisioning Kit
 ============================================================
 
-Este directorio contiene los recursos pre-descargados y las configuraciones resueltas
-necesarias para replicar Metasploitable 3 en una máquina virtual Ubuntu Server ARM64 en UTM.
+This directory contains pre-downloaded resources and resolved configurations
+needed to replicate Metasploitable 3 in an Ubuntu Server ARM64 VM inside UTM.
 
-Instrucciones de Despliegue:
-1. Copia este directorio o el archivo comprimido 'metasploitable3-arm-build.tar.gz'
-   a la máquina virtual Ubuntu Server ARM64 de UTM.
-2. Extrae el archivo comprimido en la máquina virtual si es necesario:
+Deployment Instructions:
+1. Copy this directory or the compressed archive 'metasploitable3-arm-build.tar.gz'
+   to the guest Ubuntu Server ARM64 VM in UTM.
+2. Extract the compressed archive in the VM if needed:
    tar -xvzf metasploitable3-arm-build.tar.gz
-3. Entra al directorio extraído:
+3. Enter the extracted directory:
    cd metasploitable3-arm-build
-4. Ejecuta el script de aprovisionamiento con privilegios de root:
+4. Execute the provisioning script with root privileges:
    sudo ./provision_arm.sh
 
-Nota: La máquina virtual debe tener acceso temporal a internet durante el aprovisionamiento
-para que apt-get pueda descargar las herramientas base y compiladores (build-essential,
-mysql-server, apache2, openjdk, samba, nodejs, etc.). Los servicios vulnerables
-principales (PHP 5.4.5, UnrealIRCd, ProFTPd, Drupal) se compilarán e instalarán
-utilizando las dependencias pre-descargadas de forma local en la carpeta 'assets/'.
+Note: The VM requires temporary internet access during provisioning so apt-get
+can download base tools and compilers (build-essential, mysql-server, apache2,
+openjdk, samba, nodejs, etc.). The main vulnerable services (PHP 5.4.5,
+UnrealIRCd, ProFTPd, Drupal) will compile and install using the pre-downloaded
+local archives in the 'assets/' folder.
 EOF
-echo "✓ Archivo README.txt generado."
+echo "✓ README.txt file generated."
 
-echo "=== Creando archivo comprimido tar.gz ==="
+echo "=== Creating compressed tar.gz file ==="
 tar -czf metasploitable3-arm-build.tar.gz "$BUILD_DIR"
-echo "✓ Archivo 'metasploitable3-arm-build.tar.gz' creado con éxito."
+echo "✓ 'metasploitable3-arm-build.tar.gz' file successfully created."
 
 echo "========================================================================="
-echo "Preparación COMPLETADA con éxito."
-echo "Directorio de compilación: $BUILD_DIR"
-echo "Archivo empaquetado para la VM: metasploitable3-arm-build.tar.gz"
+echo "Preparation COMPLETED successfully."
+echo "Build directory: $BUILD_DIR"
+echo "Packed archive for the VM: metasploitable3-arm-build.tar.gz"
 echo "========================================================================="
-

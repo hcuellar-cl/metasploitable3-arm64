@@ -1,28 +1,28 @@
 #!/bin/bash
-# Script de auditoría de servicios y configuración para Metasploitable 3 ARM64.
-# Ejecutar con privilegios root (sudo ./audit_services.sh) dentro de la VM.
+# Service and configuration auditing script for Metasploitable 3 ARM64.
+# Execute with root privileges (sudo ./audit_services.sh) inside the VM.
 
 set -u
 
 if [ "$EUID" -ne 0 ]; then
-    echo "ERROR: Por favor, ejecute este script como root (sudo ./audit_services.sh)"
+    echo "ERROR: Please run this script as root (sudo ./audit_services.sh)"
     exit 1
 fi
 
 OUTPUT_FILE="metasploitable_audit.txt"
 
-echo "=== Generando reporte de auditoría en $OUTPUT_FILE ==="
+echo "=== Generating audit report in $OUTPUT_FILE ==="
 
 {
     echo "========================================================================"
-    echo " REPORTE DE AUDITORÍA: METASPLOITABLE 3 ARM64"
-    echo " Fecha: $(date)"
+    echo " AUDIT REPORT: METASPLOITABLE 3 ARM64"
+    echo " Date: $(date)"
     echo " Kernel: $(uname -a)"
-    echo " Arquitectura: $(uname -m)"
+    echo " Architecture: $(uname -m)"
     echo "========================================================================"
     echo ""
 
-    echo "=== 1. PUERTOS Y SOCKETS EN ESCUCHA ==="
+    echo "=== 1. LISTENING PORTS AND SOCKETS ==="
     if command -v ss &>/dev/null; then
         ss -tulpn
     else
@@ -30,7 +30,7 @@ echo "=== Generando reporte de auditoría en $OUTPUT_FILE ==="
     fi
     echo ""
 
-    echo "=== 2. ESTADO DE LOS SERVICIOS DE METASPLOITABLE (SYSTEMD) ==="
+    echo "=== 2. STATUS OF METASPLOITABLE SERVICES (SYSTEMD) ==="
     declare -a SERVICES=(
         "apache2"
         "mysql"
@@ -47,29 +47,29 @@ echo "=== Generando reporte de auditoría en $OUTPUT_FILE ==="
     )
 
     for svc in "${SERVICES[@]}"; do
-        echo -n "• Servicio: $svc -> "
+        echo -n "• Service: $svc -> "
         if systemctl is-active --quiet "$svc"; then
-            echo "ACTIVO (running)"
+            echo "ACTIVE (running)"
         else
-            echo "INACTIVO/FALLIDO (dead)"
+            echo "INACTIVE/FAILED (dead)"
             systemctl status "$svc" --no-pager | head -n 5
         fi
     done
     echo ""
 
-    echo "=== 3. REGLAS ACTIVAS DEL CORTAFUEGOS (IPTABLES) ==="
+    echo "=== 3. ACTIVE FIREWALL RULES (IPTABLES) ==="
     iptables -L -n -v
     echo ""
 
-    echo "=== 4. CONTENEDORES DOCKER ACTIVOS (Bandera 7 de Diamantes) ==="
+    echo "=== 4. ACTIVE DOCKER CONTAINERS (7 of Diamonds Flag) ==="
     if command -v docker &>/dev/null; then
         docker ps -a
     else
-        echo "Docker no está instalado en el sistema."
+        echo "Docker is not installed on the system."
     fi
     echo ""
 
-    echo "=== 5. USUARIOS DEL RETO DE METASPLOITABLE ==="
+    echo "=== 5. METASPLOITABLE CHALLENGE USERS ==="
     declare -a USERS=(
         "leia_organa"
         "luke_skywalker"
@@ -90,14 +90,14 @@ echo "=== Generando reporte de auditoría en $OUTPUT_FILE ==="
 
     for usr in "${USERS[@]}"; do
         if id "$usr" &>/dev/null; then
-            echo "✓ Usuario '$usr' existe en el sistema (UID: $(id -u "$usr"))."
+            echo "✓ User '$usr' exists in the system (UID: $(id -u "$usr"))."
         else
-            echo "✗ Usuario '$usr' NO existe."
+            echo "✗ User '$usr' DOES NOT exist."
         fi
     done
     echo ""
 
-    echo "=== 6. VERIFICACIÓN DE CARPETAS DE SERVICIOS CRÍTICOS ==="
+    echo "=== 6. SERVICE DIRECTORIES VERIFICATION ==="
     declare -a DIRS=(
         "/var/www/html"
         "/opt/readme_app"
@@ -111,13 +111,13 @@ echo "=== Generando reporte de auditoría en $OUTPUT_FILE ==="
 
     for dir in "${DIRS[@]}"; do
         if [ -d "$dir" ]; then
-            echo "✓ Directorio '$dir' existe."
+            echo "✓ Directory '$dir' exists."
         else
-            echo "✗ Directorio '$dir' NO existe."
+            echo "✗ Directory '$dir' DOES NOT exist."
         fi
     done
     echo ""
 
 } > "$OUTPUT_FILE"
 
-echo "=== Reporte generado con éxito en $OUTPUT_FILE ==="
+echo "=== Report successfully generated in $OUTPUT_FILE ==="
