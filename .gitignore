@@ -1,0 +1,12 @@
+# Ignorar archivos del entorno de compilación
+metasploitable3-arm-build/
+metasploitable3-arm-build.tar.gz
+
+# Ignorar repositorio clonado original (subcarpeta)
+metasploitable3/
+
+# Ignorar credenciales de red locales
+utm.env
+
+# Ignorar archivos del sistema macOS
+.DS_Store
