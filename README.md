@@ -62,3 +62,21 @@ cat metasploitable_audit.txt
 ```
 
 This will confirm that all 12 services (ProFTPD, Apache, Samba, UnrealIRCd, Rails, Sinatra, Continuum, Node Chatbot, Five of Diamonds, etc.) are active, listening on their respective ports, and configured with the original CTF cards.
+
+---
+
+## Comparison Table: Metasploitable 3 ARM64 vs. Metasploitable 3 Vagrant (Original)
+
+| Feature / Component | Metasploitable 3 Vagrant (Original) | Metasploitable 3 ARM64 (This Port) |
+| :--- | :--- | :--- |
+| **Architecture** | Native `x86_64` (Intel/AMD) | Native `ARM64` (Apple Silicon) + `qemu-user-static` for legacy x86_64 binaries. |
+| **Virtualization Engine** | VirtualBox / VMware | UTM / Apple Virtualization Framework (natively optimized on macOS). |
+| **Host System Compatibility** | Designed for Intel/AMD Macs and PCs. | Designed specifically for Apple Silicon Macs (M1/M2/M3/M4/M5). |
+| **Guest Operating System** | Ubuntu 14.04 LTS (Trusty Tahr - EOL) | Ubuntu Server 20.04 LTS (Focal Fossa - ARM64). |
+| **Compilation Approach** | Uses pre-packaged binaries or Chef recipes. | Compiles core services (PHP, UnrealIRCd, ProFTPD) natively from source for ARM64. |
+| **Ruby Version & Patches** | Legacy Ruby (2.3/2.4) | Ruby 2.7 (Patched boot sequence to fix `Fixnum`, `Bignum`, and `BigDecimal.new` errors). |
+| **Sinatra App Execution** | Executed via Crystal loader/wrapper. | Bypasses Crystal loader to execute `server.rb` directly via Ruby (eliminating host hash mismatches). |
+| **Network Interface** | Hardcoded to `eth0` in configuration templates. | Dynamically autodetect active interface (e.g., `enp0s1`) for `knockd` and firewall configuration. |
+| **Service Manager** | Upstart / SysVinit | Systemd (Modernized service files for Apache, ProFTPD, Rails, Sinatra, Chatbot, etc.). |
+| **Overall Performance** | Extremely slow when emulated on Apple Silicon. | Native performance with minimal overhead. |
+
