@@ -1,4 +1,4 @@
-# Metasploitable 3 ARM64 Port for macOS (UTM / Apple Virtualization)
+# Metasploitable3 ARM64 Port for macOS (UTM / Apple Virtualization)
 
 This repository contains the scripts and configurations required to build, deploy, and provision a **100% functional Metasploitable 3 (Linux variant) Virtual Machine natively on Apple Silicon (M1/M2/M3/M4/M5)**.
 
@@ -8,7 +8,7 @@ Instead of emulating the entire guest OS using slow QEMU translation, this port 
 
 ## Technical Enhancements & Fixes in this Port
 
-To make the legacy Metasploitable 3 recipes run on a modern Ubuntu ARM64 environment, the following fixes were implemented:
+To make the legacy Metasploitable3 recipes run on a modern Ubuntu ARM64 environment, the following fixes were implemented:
 1. **x86_64 Emulation Support:** Enabled multiarch support (`amd64`), installed emulation libraries, and integrated Bionic's legacy `libssl1.0.0` and `zlib` for `amd64`.
 2. **Tanuki Java Service Wrapper Symlink:** Fixed Apache Continuum startup failures by routing the legacy x86_64 wrapper through QEMU transparently.
 3. **Ruby 2.7 conversions Patch:** Patched the Rails `readme_app` boot sequence to resolve the `SystemStackError` caused by `Fixnum` and `Bignum` recursion in newer Ruby runtimes.
@@ -73,9 +73,9 @@ This will confirm that all 12 services (ProFTPD, Apache, Samba, UnrealIRCd, Rail
 
 ---
 
-## Comparison Table: Metasploitable 3 ARM64 vs. Metasploitable 3 Vagrant (Original)
+## Comparison Table: Metasploitable3 ARM64 vs. Metasploitable3 Vagrant (Original)
 
-| Feature / Component | Metasploitable 3 Vagrant (Original) | Metasploitable 3 ARM64 (This Port) |
+| Feature / Component | Metasploitable3 Vagrant (Original) | Metasploitable3 ARM64 (This Port) |
 | :--- | :--- | :--- |
 | **Architecture** | Native `x86_64` (Intel/AMD) | Native `ARM64` (Apple Silicon) + `qemu-user-static` for legacy x86_64 binaries. |
 | **Virtualization Engine** | VirtualBox / VMware | UTM / Apple Virtualization Framework (natively optimized on macOS). |
