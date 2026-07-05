@@ -53,7 +53,7 @@ download_file "metasploitable3-readme.tar.gz" "https://github.com/jbarnett-r7/me
 download_file "libssl1.0.0_1.0.2n-1ubuntu5.13_amd64.deb" "http://security.ubuntu.com/ubuntu/pool/main/o/openssl1.0/libssl1.0.0_1.0.2n-1ubuntu5.13_amd64.deb"
 
 echo "=== Copying local configuration files from repository ==="
-SRC_FILES_DIR="metasploitable3/chef/cookbooks/metasploitable/files"
+SRC_FILES_DIR="configs"
 if [ -d "$SRC_FILES_DIR" ]; then
     cp -r "$SRC_FILES_DIR"/* "$CONFIGS_DIR"/
     echo "✓ Local files copied successfully."
