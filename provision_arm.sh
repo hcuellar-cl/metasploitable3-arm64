@@ -166,18 +166,23 @@ systemctl start mysql
 # Allow remote connections
 sed -i 's/bind-address.*/bind-address = 0.0.0.0/' /etc/mysql/mysql.conf.d/mysqld.cnf || true
 
-# Fix MySQL 8.0 unknown charset (255) error for older PHP clients
+# Fix MySQL 8.0 unknown charset (255) and caching_sha2_password authentication errors for older PHP clients
 if ! grep -q "character-set-server" /etc/mysql/mysql.conf.d/mysqld.cnf; then
     echo "character-set-server=utf8" >> /etc/mysql/mysql.conf.d/mysqld.cnf
     echo "collation-server=utf8_general_ci" >> /etc/mysql/mysql.conf.d/mysqld.cnf
+    echo "default-authentication-plugin=mysql_native_password" >> /etc/mysql/mysql.conf.d/mysqld.cnf
 fi
 
 # Change MySQL root password to sploitme in an idempotent way
 if mysql -u root -psploitme -e "SELECT 1" &>/dev/null; then
     echo "✓ MySQL root password is already set to 'sploitme'."
+    mysql -u root -psploitme -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'sploitme';" || true
+    mysql -u root -psploitme -e "CREATE USER IF NOT EXISTS 'root'@'127.0.0.1' IDENTIFIED WITH mysql_native_password BY 'sploitme'; ALTER USER 'root'@'127.0.0.1' IDENTIFIED WITH mysql_native_password BY 'sploitme';" || true
+    mysql -u root -psploitme -e "CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'sploitme'; ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'sploitme';" || true
 else
-    mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'sploitme'; FLUSH PRIVILEGES;" || \
-    mysql -u root -psploitme -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'sploitme'; FLUSH PRIVILEGES;"
+    mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'sploitme';" || true
+    mysql -u root -e "CREATE USER IF NOT EXISTS 'root'@'127.0.0.1' IDENTIFIED WITH mysql_native_password BY 'sploitme'; ALTER USER 'root'@'127.0.0.1' IDENTIFIED WITH mysql_native_password BY 'sploitme';" || true
+    mysql -u root -e "CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'sploitme'; ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'sploitme';" || true
 fi
 systemctl restart mysql
 echo "✓ MySQL started and configured with password 'sploitme'."
@@ -480,7 +485,7 @@ else
     # Inject database
     mysql -u root -psploitme -e "CREATE DATABASE IF NOT EXISTS drupal;"
     # In MySQL 8, the user must be created first, then privileges granted separately (without IDENTIFIED BY in GRANT)
-    mysql -u root -psploitme -e "CREATE USER IF NOT EXISTS 'root'@'localhost' IDENTIFIED BY 'sploitme';" || true
+    mysql -u root -psploitme -e "CREATE USER IF NOT EXISTS 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'sploitme';" || true
     mysql -u root -psploitme -e "GRANT SELECT, INSERT, DELETE, CREATE, DROP, INDEX, ALTER ON drupal.* TO 'root'@'localhost';"
     mysql -u root -psploitme drupal < "$CONFIGS_DIR/drupal/drupal.sql"
     echo "✓ Drupal database initialized."
@@ -758,7 +763,7 @@ chmod 600 /home/leia_organa/2_of_spades.pcapng
 
 # 8 of Hearts (Secret MySQL database)
 mysql -u root -psploitme -e "CREATE DATABASE IF NOT EXISTS super_secret_db;"
-mysql -u root -psploitme -e "CREATE USER IF NOT EXISTS 'root'@'localhost' IDENTIFIED BY 'sploitme';" || true
+mysql -u root -psploitme -e "CREATE USER IF NOT EXISTS 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'sploitme';" || true
 mysql -u root -psploitme -e "GRANT ALL PRIVILEGES ON super_secret_db.* TO 'root'@'localhost';"
 mysql -u root -psploitme super_secret_db < "$CONFIGS_DIR/flags/super_secret_db.sql"
 
