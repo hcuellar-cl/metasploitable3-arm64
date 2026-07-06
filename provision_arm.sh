@@ -176,13 +176,13 @@ fi
 # Change MySQL root password to sploitme in an idempotent way
 if mysql -u root -psploitme -e "SELECT 1" &>/dev/null; then
     echo "✓ MySQL root password is already set to 'sploitme'."
-    mysql -u root -psploitme -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'sploitme';" || true
-    mysql -u root -psploitme -e "CREATE USER IF NOT EXISTS 'root'@'127.0.0.1' IDENTIFIED WITH mysql_native_password BY 'sploitme'; ALTER USER 'root'@'127.0.0.1' IDENTIFIED WITH mysql_native_password BY 'sploitme';" || true
-    mysql -u root -psploitme -e "CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'sploitme'; ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'sploitme';" || true
+    mysql -u root -psploitme -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'sploitme'; GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;" || true
+    mysql -u root -psploitme -e "CREATE USER IF NOT EXISTS 'root'@'127.0.0.1' IDENTIFIED WITH mysql_native_password BY 'sploitme'; ALTER USER 'root'@'127.0.0.1' IDENTIFIED WITH mysql_native_password BY 'sploitme'; GRANT ALL PRIVILEGES ON *.* TO 'root'@'127.0.0.1' WITH GRANT OPTION;" || true
+    mysql -u root -psploitme -e "CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'sploitme'; ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'sploitme'; GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;" || true
 else
-    mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'sploitme';" || true
-    mysql -u root -e "CREATE USER IF NOT EXISTS 'root'@'127.0.0.1' IDENTIFIED WITH mysql_native_password BY 'sploitme'; ALTER USER 'root'@'127.0.0.1' IDENTIFIED WITH mysql_native_password BY 'sploitme';" || true
-    mysql -u root -e "CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'sploitme'; ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'sploitme';" || true
+    mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'sploitme'; GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;" || true
+    mysql -u root -e "CREATE USER IF NOT EXISTS 'root'@'127.0.0.1' IDENTIFIED WITH mysql_native_password BY 'sploitme'; ALTER USER 'root'@'127.0.0.1' IDENTIFIED WITH mysql_native_password BY 'sploitme'; GRANT ALL PRIVILEGES ON *.* TO 'root'@'127.0.0.1' WITH GRANT OPTION;" || true
+    mysql -u root -e "CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'sploitme'; ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'sploitme'; GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;" || true
 fi
 systemctl restart mysql
 echo "✓ MySQL started and configured with password 'sploitme'."
