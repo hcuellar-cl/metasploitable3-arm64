@@ -165,6 +165,13 @@ echo "=== 4. Configuring MySQL database ==="
 systemctl start mysql
 # Allow remote connections
 sed -i 's/bind-address.*/bind-address = 0.0.0.0/' /etc/mysql/mysql.conf.d/mysqld.cnf || true
+
+# Fix MySQL 8.0 unknown charset (255) error for older PHP clients
+if ! grep -q "character-set-server" /etc/mysql/mysql.conf.d/mysqld.cnf; then
+    echo "character-set-server=utf8" >> /etc/mysql/mysql.conf.d/mysqld.cnf
+    echo "collation-server=utf8_general_ci" >> /etc/mysql/mysql.conf.d/mysqld.cnf
+fi
+
 # Change MySQL root password to sploitme in an idempotent way
 if mysql -u root -psploitme -e "SELECT 1" &>/dev/null; then
     echo "✓ MySQL root password is already set to 'sploitme'."
